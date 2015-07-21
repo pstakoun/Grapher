@@ -55,13 +55,13 @@ public class Graph extends JPanel
 		g2d.setColor(Color.RED);
 		double prevX = -250;
 		double prevY = -(a*prevX*prevX + b*prevX + c);
-		// Loop through x values
+		// Loop through x values.
 		for (double x = -250; x <= 250; x++)
 		{
 			double y = -(a*x*x + b*x + c);
 			Line2D l = new Line2D.Double(x, y, prevX, prevY);
 			g2d.draw(l);
-			// Update previous x and y
+			// Update previous x and y.
 			prevX = x;
 			prevY = y;
 		}
