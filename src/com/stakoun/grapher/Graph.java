@@ -1,4 +1,4 @@
-package me.pstakoun.grapher;
+package com.stakoun.grapher;
 
 import java.awt.Color;
 import java.awt.Dimension;

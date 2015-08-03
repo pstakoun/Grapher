@@ -1,4 +1,4 @@
-package me.pstakoun.grapher;
+package com.stakoun.grapher;
 
 import java.awt.BorderLayout;
 import java.awt.Dimension;
