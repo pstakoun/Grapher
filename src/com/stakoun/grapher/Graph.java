@@ -5,6 +5,8 @@ import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.geom.Line2D;
+import java.util.LinkedList;
+import java.util.Stack;
 
 import javax.swing.JPanel;
 
@@ -14,24 +16,101 @@ import javax.swing.JPanel;
  */
 public class Graph extends JPanel
 {
-	// Create graph variables.
-	private Dimension size;
-	private Main main;
+	private String postfix;
 	
-	public Graph(Main main)
+	public Graph(String equation)
 	{
-		// Initialize graph.
-		size = new Dimension(500, 500);
-		this.setPreferredSize(size);
-		this.main = main;
+		this.setPreferredSize(new Dimension(800, 800));
+		postfix = toPostfix(equation);
 		
-		// Show graph.
 		this.setVisible(true);
 	}
 	
-	/**
-	 * Updates graph with latest variables.
-	 */
+	private String toPostfix(String expr)
+	{
+        final String ops = "-+/*^";
+        StringBuilder sb = new StringBuilder();
+        Stack<Integer> s = new Stack<>();
+ 
+        for (String token : expr.split("\\s")) {
+            if (token.isEmpty())
+                continue;
+            char c = token.charAt(0);
+            int idx = ops.indexOf(c);
+
+            if (idx != -1) {
+                if (s.isEmpty())
+                    s.push(idx);
+ 
+                else {
+                    while (!s.isEmpty()) {
+                        int prec2 = s.peek() / 2;
+                        int prec1 = idx / 2;
+                        if (prec2 > prec1 || (prec2 == prec1 && c != '^'))
+                            sb.append(ops.charAt(s.pop())).append(' ');
+                        else break;
+                    }
+                    s.push(idx);
+                }
+            } 
+            else if (c == '(') {
+                s.push(-2);
+            } 
+            else if (c == ')') {
+                while (s.peek() != -2)
+                    sb.append(ops.charAt(s.pop())).append(' ');
+                s.pop();
+            }
+            else {
+                sb.append(token).append(' ');
+            }
+        }
+        while (!s.isEmpty())
+            sb.append(ops.charAt(s.pop())).append(' ');
+        return sb.toString();
+    }
+	
+	private double getY(double x)
+	{
+		String s = postfix.replaceAll("x", String.valueOf(x));
+        return eval(s);
+    }
+	
+	private double eval (String s)
+	{
+		LinkedList<Double> stack = new LinkedList<Double>();
+		for (String token : s.split("\\s")) {
+			Double tokenNum = null;
+			try {
+				tokenNum = Double.parseDouble(token);
+			} catch(NumberFormatException e) { }
+			if (tokenNum != null) {
+				stack.push(tokenNum);
+			} else if (token.equals("*")) {
+				double second = stack.pop();
+				double first = stack.pop();
+				stack.push(first * second);
+			} else if (token.equals("/")) {
+				double second = stack.pop();
+				double first = stack.pop();
+				stack.push(first / second);
+			} else if (token.equals("-")) {
+				double second = stack.pop();
+				double first = stack.pop();
+				stack.push(first - second);
+			} else if (token.equals("+")) {
+				double second = stack.pop();
+				double first = stack.pop();
+				stack.push(first + second);
+			} else if (token.equals("^")) {
+				double second = stack.pop();
+				double first = stack.pop();
+				stack.push(Math.pow(first, second));
+			}
+		}
+		return stack.pop();
+	}
+	
 	@Override
 	public void paintComponent(Graphics g)
 	{
@@ -40,30 +119,28 @@ public class Graph extends JPanel
 		g2d.translate(getWidth()/2, getHeight()/2);
 		g2d.setColor(Color.BLACK);
 		
-		// Draw empty graph.
 		Line2D xAxis = new Line2D.Double(-getWidth()/2, 0, getWidth()/2, 0);
 		Line2D yAxis = new Line2D.Double(0, -getHeight()/2, 0, getHeight()/2);
 		g2d.draw(xAxis);
 		g2d.draw(yAxis);
 		
-		// Calculate line coordinates from user input.
-		double a = main.getA();
-		double b = main.getB();
-		double c = main.getC();
-		
-		// Draw graph from user input.
 		g2d.setColor(Color.RED);
-		double prevX = -250;
-		double prevY = -(a*prevX*prevX + b*prevX + c);
-		// Loop through x values.
-		for (double x = -250; x <= 250; x++)
+		double prevX = -getWidth()/2;
+		double prevY = -getY(-getHeight()/2);
+		for (double x = -20; x <= 20; x+=0.05)
 		{
-			double y = -(a*x*x + b*x + c);
-			Line2D l = new Line2D.Double(x, y, prevX, prevY);
-			g2d.draw(l);
-			// Update previous x and y.
-			prevX = x;
+			double x1 = x*20;
+			double y = -getY(x)*20;
+			if ((y > getHeight()/2 || y < -getHeight()/2)
+					&& (prevY > getHeight()/2 || prevY < -getHeight()/2)) {
+				prevX = x1;
+				prevY = y;
+				continue;
+			}
+			Line2D l = new Line2D.Double(x1, y, prevX, prevY);
+			prevX = x1;
 			prevY = y;
+			g2d.draw(l);
 		}
 	}
 
