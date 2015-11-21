@@ -52,7 +52,7 @@ public class Graph extends JPanel
                     }
                     s.push(idx);
                 }
-            } 
+            }
             else if (c == '(') {
                 s.push(-2);
             } 
